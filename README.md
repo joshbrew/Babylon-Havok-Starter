@@ -1,5 +1,7 @@
 ## Build and run
 
+This project demonstrates Havok Physics and BabylonJS in a lightweight, state-aware and local storage-enabled react application. It handles scene switching for you and other things with a simple state system to sync html UI and game state controls. 
+
 With `tinybuild` installed globally (`npm i -g tinybuild`): `npm start`
 
 ### [Try it (babylon-havok-starter.netlify.app)](https://babylon-havok-starter.netlify.app/)
