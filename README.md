@@ -2,7 +2,7 @@
 
 With `tinybuild` installed globally (`npm i -g tinybuild`): `npm start`
 
-<img width="399" alt="knockoff-min" src="https://github.com/user-attachments/assets/38b7c063-0759-4443-801f-6cb216cdfbf5" />
+<img width="504" alt="knockoff-min (1)" src="https://github.com/user-attachments/assets/5c7240a9-9348-4a63-8ee6-38393fe4ba96" />
 
 ## Configuration
 
