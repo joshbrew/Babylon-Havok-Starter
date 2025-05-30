@@ -1,6 +1,6 @@
 ## Build and run
 
-This project demonstrates Havok Physics and BabylonJS (WebGPU or you can comment in WebGL2 in ui/components/game/renderer/babylonContext.ts) in a lightweight, state-aware and local storage-enabled react application. It handles scene switching for you and other things with a simple state system to sync html UI and game state controls. The build environment is mobile-ready.
+This project demonstrates Havok Physics and BabylonJS (WebGPU or you can comment in WebGL2 in ui/components/game/renderer/babylonContext.ts) in a lightweight, state-aware and local storage-enabled react application. It handles scene switching for you and other things with a simple state system to sync html UI and game state controls. The build environment is mobile-ready. Controls are only set up for desktop rn. 
 
 With `tinybuild` installed globally (`npm i -g tinybuild`): `npm start`
 
