@@ -2,7 +2,7 @@
 
 With `tinybuild` installed globally (`npm i -g tinybuild`): `npm start`
 
-### [Try it](https://babylon-havok-starter.netlify.app/)
+### [Try it (babylon-havok-starter.netlify.app)](https://babylon-havok-starter.netlify.app/)
 <img width="504" alt="knockoff-min (1)" src="https://github.com/user-attachments/assets/5c7240a9-9348-4a63-8ee6-38393fe4ba96" />
 
 ## Configuration
