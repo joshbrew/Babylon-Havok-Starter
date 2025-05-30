@@ -153,3 +153,38 @@
     margin-left: 0.5rem;
   }
   
+.ingame-menu__controls button {
+  padding: 4px;
+}
+
+  /* Container for exit + pause/play */
+.ingame-menu__controls {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+/* Make the X button smaller & circular */
+.ingame-menu__exit-button,
+.ingame-menu__pause-button {
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  font-size: 1.25rem;
+  line-height: 1;
+  background: rgba(255, 255, 255, 0.85);
+  border: 2px solid #333;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.1s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Hover states */
+.ingame-menu__exit-button:hover,
+.ingame-menu__pause-button:hover {
+  background: #fff;
+  transform: translateY(-2px);
+}

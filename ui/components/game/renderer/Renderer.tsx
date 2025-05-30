@@ -68,7 +68,7 @@ export class Renderer extends sComponent<Props, State> {
           break;
         case 'clear':
         case 'main-menu':
-          this._clearScene();
+          await this._clearScene();
           break;
         case 'reset':
           // **Stop** the old loop **before** clearing the scene
@@ -89,44 +89,46 @@ export class Renderer extends sComponent<Props, State> {
 
   // Initialize and start scene
   private async _beginScene() {
-    this._clearScene();
-    await this.props.context.switchScene(
-      this.state.gameScene,
-      this.state.gameOpts
-    );
+    // clearScene now does everything — stopRenderLoop, scene.dispose, canvas-clear
+    await this.props.context.clearScene();
+  
+    // build the new scene
+    await this.props.context.switchScene(this.state.gameScene, this.state.gameOpts);
+  
+    // kick off rendering
     this._startRender();
   }
 
   private _startRender() {
     if (!this._rendering) {
       this.props.context.startRender();
-      this._rendering = true;
       this.setState({ gameState: 'playing' });
     }
+    this._rendering = true;
   }
 
   private _stopRender() {
     if (this._rendering) {
       this.props.context.stopRender();
-      this._rendering = false;
     }
+    this._rendering = false;
   }
 
-  private _clearScene() {
+  private async _clearScene() {
     if (this._rendering) {
       this._stopRender();
     }
-    this.props.context.clearScene();
+    await this.props.context.clearScene();
   }
 
   private handleResize = () => {
     this.props.context.resize();
   };
 
-  componentWillUnmount() {
+  async componentWillUnmount() {
     window.removeEventListener('resize', this.handleResize);
     this._stopRender();
-    this._clearScene();
+    await this._clearScene();
     this.props.context.dispose();
   }
 

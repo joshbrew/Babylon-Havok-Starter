@@ -15,7 +15,7 @@ export interface BabylonContext {
     init(canvas: HTMLCanvasElement): Promise<void>;
 
     /** Tear down current scene (but keep engine alive) */
-    clearScene(): void;
+    clearScene(): Promise<true>;
 
     /** Build & switch to a new scene */
     switchScene(
@@ -33,7 +33,7 @@ export interface BabylonContext {
     resize(): void;
 
     /** Dispose engine + any leftover resources */
-    dispose(): void;
+    dispose(): Promise<boolean>;
 }
 
 
@@ -55,23 +55,15 @@ export class BabylonContextImpl implements BabylonContext {
         //   preserveDrawingBuffer: true,
         //   disableWebGL2Support: false,
         // });
-        
+
         this.engine = new BABYLON.WebGPUEngine(canvas, {// MUCH FASTER
-          stencil: true,
+            stencil: true,
         })
         await this.engine.initAsync();
         state.setState({
             canvas: this.canvas,
             engine: this.engine
         });
-    }
-
-    /** Dispose of the currently loaded scene */
-    clearScene() {
-        if (this.scene) {
-            this.scene.dispose();
-            this.scene = null;
-        }
     }
 
     /**
@@ -82,7 +74,7 @@ export class BabylonContextImpl implements BabylonContext {
         sceneKey?: string,
         opts?: { numSpheres?: number, [key: string]: any }
     ) {
-        this.clearScene();
+        await this.clearScene();
 
         // alias “begin” → “default”
         const factoryKey = sceneKey ? sceneKey : '_default';
@@ -112,7 +104,23 @@ export class BabylonContextImpl implements BabylonContext {
     /** Stop rendering and clear the canvas to black */
     stopRender() {
         this.engine.stopRenderLoop();
-        this.engine.clear(new BABYLON.Color4(0, 0, 0, 0), true, true);
+    }
+
+    /** Dispose of the currently loaded scene */
+    async clearScene(): Promise<true> {
+        // 1) Always stop the render loop first
+        this.engine.stopRenderLoop();
+
+        // 2) If there is a scene, dispose it synchronously
+        if (this.scene) {
+            this.scene.dispose();
+            this.scene = null;
+        }
+
+        // 3) Blow away whatever’s left in the canvas
+        this.engine.clear(new BABYLON.Color4(0, 0, 0, 1), true, true);
+
+        return true;
     }
 
     /** Handle a window.resize event */
@@ -121,11 +129,10 @@ export class BabylonContextImpl implements BabylonContext {
     }
 
     /** Full tear‐down of scene + engine */
-    dispose() {
-        this.clearScene();
-        this.engine.dispose();
-        state.setState({
-            engine: null
-        });
+    async dispose() {
+        await this.clearScene();
+        if (this.engine)
+            this.engine.dispose();
+        return true;
     }
 }

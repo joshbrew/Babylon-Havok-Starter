@@ -1,7 +1,7 @@
 import * as BABYLON from 'babylonjs';
 import HavokPhysics from '@babylonjs/havok';
 import keyboard from 'keyboardjs';
-import { Howl } from 'howler';
+import { Howl, Howler } from 'howler';
 import { state } from '../../../scripts/state';
 import { SpriteFactory } from './babylonHelpers';
 import * as GUI from 'babylonjs-gui';
@@ -162,6 +162,12 @@ export class BatsuganScene {
     this.scene = new BABYLON.Scene(engine);
     this.sprites = new SpriteFactory(this.scene);
 
+  }
+  // #endregion
+
+  // #region Initialization
+  public async init(): Promise<BABYLON.Scene> {
+
     window.addEventListener('keydown', (e) => {
       const block = [
         'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight',
@@ -171,6 +177,26 @@ export class BatsuganScene {
         e.preventDefault();
       }
     });
+
+    // 1) Audio setup
+    this.sounds = this.setupSounds();
+
+    // 2) Static scene setup
+    this.setupState();
+    this.setupCamera();
+    this.setupLight();
+    this.setupBackground();
+
+    // 3) Physics & particles
+    await this.setupPhysics();
+    this._initStarfield();
+    this._initHitParticles();
+
+    // 4) Entities
+    this.createPlayer();
+    this.createEnemy();
+    this._initTailPlane();
+
 
     state.subscribeEvent('lives', (lives) => {
       if (lives <= 0 && state.data.gameState !== 'lose') {
@@ -196,31 +222,6 @@ export class BatsuganScene {
     })
 
 
-    this.registerCleanup();
-  }
-  // #endregion
-
-  // #region Initialization
-  public async init(): Promise<BABYLON.Scene> {
-    // 1) Audio setup
-    this.sounds = this.setupSounds();
-
-    // 2) Static scene setup
-    this.setupState();
-    this.setupCamera();
-    this.setupLight();
-    this.setupBackground();
-
-    // 3) Physics & particles
-    await this.setupPhysics();
-    this._initStarfield();
-    this._initHitParticles();
-
-    // 4) Entities
-    this.createPlayer();
-    this.createEnemy();
-    this._initTailPlane();
-
     // 5) UI & Intro
     this.setupGUI();
     this.bgMusic.play();
@@ -232,6 +233,8 @@ export class BatsuganScene {
         if (s === 'lose') { this.bgMusic.stop(); this.loseMusic.play(); this.playEndAnimation(false); }
       });
     });
+
+    this.registerCleanup();
 
     return this.scene;
   }
@@ -352,11 +355,12 @@ export class BatsuganScene {
   }
 
   private setupLight() {
-    new BABYLON.HemisphericLight(
+    const light = new BABYLON.HemisphericLight(
       'ambient',
       new BABYLON.Vector3(0, -1, 0),
       this.scene
-    ).intensity = 2;
+    );
+    light.intensity = 2;
   }
 
   private setupBackground() {
@@ -365,23 +369,33 @@ export class BatsuganScene {
       { size: 150 },
       this.scene
     );
-    backdrop.billboardMode = BABYLON.Mesh.BILLBOARDMODE_ALL;
+    backdrop.rotation.x = Math.PI / 2;
     backdrop.position.set(0, 0, 50);
     const backMat = new BABYLON.StandardMaterial('backMat', this.scene);
-    backMat.emissiveTexture = new BABYLON.Texture(
+
+    // `true` = do _not_ generate mip maps
+    const starTex = new BABYLON.Texture(
       'assets/sprites/starfield.png',
-      this.scene
+      this.scene,
+      /* noMipmap = */ true,
+      /* invertY   = */ false
     );
+
+    backMat.emissiveTexture = starTex;
     backMat.disableLighting = true;
     backMat.backFaceCulling = false;
     backdrop.material = backMat;
+
+
   }
 
   // #region Sound Setup
   private setupSounds(): Sounds {
-    this.bgMusic = new Howl({ src: ['assets/sounds/royaltyfree.mp3'], loop: true, volume: 0.2 });
-    this.winMusic = new Howl({ src: ['assets/sounds/win.mp3'], loop: false, volume: 0.2 });
-    this.loseMusic = new Howl({ src: ['assets/sounds/lose.mp3'], loop: false, volume: 0.2 });
+    this.bgMusic = new Howl({
+      src: ['assets/sounds/royaltyfree.mp3'], loop: true, volume: 0.2, pool: 1
+    });
+    this.winMusic = new Howl({ src: ['assets/sounds/win.mp3'], loop: false, volume: 0.2, pool: 1 });
+    this.loseMusic = new Howl({ src: ['assets/sounds/lose.mp3'], loop: false, volume: 0.2, pool: 1 });
 
     const ps = new Howl({ src: ['assets/sounds/Laser_Gun.wav'] });
     ps.volume(0.1);
@@ -413,63 +427,63 @@ export class BatsuganScene {
   }
 
   private registerCleanup() {
-    this.scene.onDisposeObservable.add(() => {
-      // 1) remove your render-loop observer
-      if (this.onBeforeRenderObserver) {
-        this.scene.onBeforeRenderObservable.remove(this.onBeforeRenderObserver);
-      }
+    this.scene.onDispose = () => {
+      console.log('disposing');
 
-      // 2) unbind all keyboard listeners
-      this.inputUnbinds.forEach(unbind => unbind());
-      this.inputUnbinds.length = 0;
-
-      // 3) stop & dispose all Howl sounds
-      Object.values(this.sounds).forEach(sound => {
+      // stop & dispose all Howl sounds
+      Object.values(this.sounds).forEach((sound: Howl) => {
+        console.log('stopping', sound);
         sound.stop();
         sound.unload();
       });
+      Howler.unload();
+
+      // unbind all keyboard listeners
+      this.inputUnbinds.forEach(unbind => unbind());
+      this.inputUnbinds.length = 0;
+
+
 
       // 4) dispose every particle system
-      this.hitEmitters.forEach(ps => ps.dispose());
-      this.hitEmitters.length = 0;
-      if (this.starfield) {
-        this.starfield.dispose();
-      }
+      // this.hitEmitters.forEach(ps => ps.dispose());
+      // this.hitEmitters.length = 0;
+      // if (this.starfield) {
+      //   this.starfield.dispose();
+      // }
 
-      // 5) dispose any tail or other custom meshes
-      //    (they’re children of the scene, so scene.dispose() will catch them,
-      //     but if you kept references you can null them out here)
+      // // 5) dispose any tail or other custom meshes
+      // //    (they’re children of the scene, so scene.dispose() will catch them,
+      // //     but if you kept references you can null them out here)
 
-      // 6) dispose all bullets & physics meshes
-      this.playerBullets.forEach(b => {
-        b.sprite.dispose();
-        b.physMesh.dispose();
-      });
-      this.enemyBullets.forEach(b => {
-        b.sprite.dispose();
-        b.physMesh.dispose();
-      });
-      this.playerBullets = [];
-      this.enemyBullets = [];
+      // // 6) dispose all bullets & physics meshes
+      // this.playerBullets.forEach(b => {
+      //   b.sprite.dispose();
+      //   b.physMesh.dispose();
+      // });
+      // this.enemyBullets.forEach(b => {
+      //   b.sprite.dispose();
+      //   b.physMesh.dispose();
+      // });
+      // this.playerBullets = [];
+      // this.enemyBullets = [];
 
 
-      // 7) dispose your hidden bullet templates
-      Object.values(this.bulletTemplates).forEach(tmpl => tmpl?.dispose());
-      this.bulletTemplates = {};
+      // // 7) dispose your hidden bullet templates
+      // Object.values(this.bulletTemplates).forEach(tmpl => tmpl?.dispose());
+      // this.bulletTemplates = {};
 
-      this.physicsPlugin.dispose();
-      
-      // 8) dispose GUI
-      if (this.guiTex) {
-        this.guiTex.dispose();
-      }
+
+      // // 8) dispose GUI
+      // if (this.guiTex) {
+      //   this.guiTex.dispose();
+      // }
 
       // 9) finally, clear any other subscriptions (e.g. to your state store)
       //    If subscribeEvent returned an unsubscribe, call it here.
       //    e.g. this.livesUnsub(); this.bossHPUnsub();
 
       // (scene.dispose() itself will clean up lights, cameras, physics, etc.)
-    });
+    };
   }
 
   // #endregion
@@ -549,6 +563,7 @@ export class BatsuganScene {
     // capture the observer id so we can remove it later
     this.onBeforeRenderObserver =
       this.scene.onBeforeRenderObservable.add(() => {
+        if (this.scene.isDisposed) return;
         const now = performance.now();
         const dt = this.engine.getDeltaTime() / 1000;
 
@@ -690,6 +705,11 @@ export class BatsuganScene {
     let elapsed = 0;
 
     const handle = setInterval(() => {
+
+      if (this.scene.isDisposed) {
+        clearInterval(handle);
+        return;
+      }
       mesh.isVisible = !mesh.isVisible;
       elapsed += interval;
       if (elapsed >= duration) {
@@ -729,6 +749,10 @@ export class BatsuganScene {
 
     let elapsed = 0;
     const handle = setInterval(() => {
+      if (this.scene.isDisposed) {
+        clearInterval(handle);
+        return;
+      }
       const isOriginal = mat.diffuseTexture !== null;
 
       if (isOriginal) {
@@ -967,6 +991,7 @@ export class BatsuganScene {
 
     // Restore after invuln window
     setTimeout(() => {
+      if (this.scene.isDisposed) return;
       this.playerInvulnerable = false;
       if (!this.isPlayerAlive) return;
       shape.filterMembershipMask = this.originalPlayerMembershipMask;
@@ -1111,6 +1136,7 @@ export class BatsuganScene {
   private async spawnEnemySpiral() {
     const cfg = bulletConfigs.enemy;
     for (let i = 0; i < 48; i++) {
+      if (state.data.gameState !== 'playing') return;
       const angle = (2 * Math.PI * i) / 24 + Date.now() / 1000;
 
       // same Y‐offset so bullets start at the ship’s nose

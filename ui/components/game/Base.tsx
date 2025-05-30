@@ -37,11 +37,7 @@ export class GameBase extends sComponent {
                         <MainMenu />
                     }
                     {
-                        (
-                            gameState === "playing" || 
-                            gameState === "win"     ||
-                            gameState === "lose"
-                        ) && 
+                        gameState !== "main-menu" &&
                         <InGameMenu />
                     }
                 </div>
