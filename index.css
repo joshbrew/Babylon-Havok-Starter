@@ -1,0 +1,155 @@
+/* Make your 3D renderer fill the entire viewport */
+.renderer,
+.renderer canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    margin: 0;
+    padding: 0;
+    background-color: black;
+    z-index:0;
+}
+
+/* Overlay UI layer, centered both ways */
+.ui {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    /* stack buttons vertically */
+    align-items: center;
+    /* center horizontally */
+    justify-content: center;
+    /* center vertically */
+    pointer-events: none;
+    /* disable clicks on empty space */
+    transition: opacity 0.3s ease;
+    z-index:1;
+}
+
+/* Main menu: center its buttons */
+#main-menu {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    pointer-events: auto;
+    /* let clicks through */
+}
+
+/* In-game menu: pin top-right */
+#play-menu {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    pointer-events: auto;
+    color:white;
+}
+
+/* Shared button styling */
+.ui button {
+    margin: 0.5rem 0;
+    padding: 1rem 2rem;
+    font-size: 1.25rem;
+    background: rgba(255, 255, 255, 0.85);
+    border: 2px solid #333;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.2s ease, transform 0.1s ease;
+}
+
+.ui button:hover {
+    background: #fff;
+    transform: translateY(-2px);
+}
+
+/* ── BOSS HP ───────────────────────────────────────────────────────── */
+.stat--boss {
+    position: fixed;
+    top: 1rem;
+    left: 1rem;
+    pointer-events: none;
+    z-index: 10;
+  }
+  .stat--boss .stat__label {
+    display: block;
+    margin-bottom: 0.25rem;
+    background: rgba(0,0,0,0.6);
+    padding: 0.1rem 0.4rem;
+    border-radius: 2px;
+  }
+  .stat__progress--boss {
+    width: 14rem;
+    height: 1.25rem;
+    border: 2px solid #fff;
+    border-radius: 3px;
+    overflow: hidden;
+    -webkit-appearance: none;
+    appearance: none;
+  }
+  .stat__progress--boss::-webkit-progress-bar { background: #300; }
+  .stat__progress--boss::-webkit-progress-value { background: red; }
+  .stat__progress--boss::-moz-progress-bar       { background: red; }
+  
+  /* ── PLAYER HP ─────────────────────────────────────────────────────── */
+  .stat--player {
+    position: fixed;
+    bottom: 3rem;
+    left: 50%;
+    transform: translateX(-50%);
+    pointer-events: none;
+    z-index: 10;
+  }
+  .stat--player .stat__label {
+    display: block;
+    margin-bottom: 0.25rem;
+    background: rgba(0,0,0,0.6);
+    padding: 0.1rem 0.4rem;
+    border-radius: 2px;
+  }
+  .stat__progress--player {
+    width: 12rem;
+    height: 1.25rem;
+    border: 2px solid #0f0;
+    border-radius: 3px;
+    overflow: hidden;
+    -webkit-appearance: none;
+    appearance: none;
+  }
+  .stat__progress--player::-webkit-progress-bar { background: #030; }
+  .stat__progress--player::-webkit-progress-value { background: limegreen; }
+  .stat__progress--player::-moz-progress-bar       { background: limegreen; }
+  
+  /* ── SCORE & LIVES ────────────────────────────────────────────────── */
+  .stat--score,
+  .stat--lives {
+    position: fixed;
+    bottom: 1rem;
+    pointer-events: none;
+    background: rgba(0,0,0,0.6);
+    padding: 0.2rem 0.6rem;
+    border-radius: 3px;
+    font-family: Consolas, monospace;
+    color: #fff;
+    text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+    font-size: 1.1rem;
+    z-index: 10;
+  }
+  .stat--score {
+    left: 1rem;
+  }
+  .stat--lives {
+    right: 1rem;
+  }
+  .stat__value--score,
+  .stat__value--lives {
+    margin-left: 0.5rem;
+  }
+  
