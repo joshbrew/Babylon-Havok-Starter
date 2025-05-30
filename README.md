@@ -13,7 +13,7 @@ See [`./tinybuild.config.js`](./tinybuild.config.js) for settings.
 
 Add build:true for build-only, add serve:true for serve-only, or set bundle or server to false alternatively.
 
-Note, you want to change to using core packages and so on to only get the packages you need compiled out of Babylonjs to lower program weight. Ensure HavokPhysics.wasm is present in the dist or otherwise the same level as the importing javascript file as it uses import.meta.url to locate it.
+Note, you want to change to using core packages and so on to only get the packages you need compiled out of Babylonjs to lower program weight. Ensure HavokPhysics.wasm is present in the dist or otherwise the same level as the importing javascript file as it uses import.meta.url to locate it. (we did it for you in the existing dist)
 
 SFX pack used: https://coffeevalenbat.itch.io/sweet-sounds-sfx-pack
 
